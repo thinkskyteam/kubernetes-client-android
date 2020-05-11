@@ -37,12 +37,7 @@ import okhttp3.TlsVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -408,15 +403,17 @@ public class Config {
       config.setMasterUrl("https://" + hostPort);
     }
     if (Utils.getSystemPropertyOrEnvVar(KUBERNETES_AUTH_TRYSERVICEACCOUNT_SYSTEM_PROPERTY, true)) {
-      boolean serviceAccountCaCertExists = Files.isRegularFile(new File(KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH).toPath());
+      boolean serviceAccountCaCertExists = isRegularFile(new File(KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH));
       if (serviceAccountCaCertExists) {
         LOGGER.debug("Found service account ca cert at: ["+KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH+"].");
         config.setCaCertFile(KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH);
       } else {
         LOGGER.debug("Did not find service account ca cert at: ["+KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH+"].");
       }
-      try {
-        String serviceTokenCandidate = new String(Files.readAllBytes(new File(KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH).toPath()));
+      try(RandomAccessFile f = new RandomAccessFile(new File(KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH), "r")) {
+        byte[] b = new byte[(int)f.length()];
+        f.readFully(b);
+        String serviceTokenCandidate = new String(b);
         LOGGER.debug("Found service account token at: ["+KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH+"].");
         config.setOauthToken(serviceTokenCandidate);
         String txt = "Configured service account doesn't have access. Service account may have been revoked.";
@@ -479,11 +476,15 @@ public class Config {
       }
 
       File kubeConfigFile = new File(fileName);
+
       if (kubeConfigFile.isFile()) {
         LOGGER.debug("Found for Kubernetes config at: [{}].", kubeConfigFile.getPath());
         String kubeconfigContents;
-        try (FileReader reader = new FileReader(kubeConfigFile)){
-          kubeconfigContents = IOHelpers.readFully(reader);
+
+        try(RandomAccessFile f = new RandomAccessFile(kubeConfigFile, "r")) {
+        byte[] b = new byte[(int)f.length()];
+        f.readFully(b);
+        kubeconfigContents = new String(b);
         } catch(IOException e) {
           LOGGER.error("Could not load Kubernetes config file from {}", kubeConfigFile.getPath(), e);
           return false;
@@ -616,11 +617,13 @@ public class Config {
     LOGGER.debug("Trying to configure client namespace from Kubernetes service account namespace path...");
     if (Utils.getSystemPropertyOrEnvVar(KUBERNETES_TRYNAMESPACE_PATH_SYSTEM_PROPERTY, true)) {
       String serviceAccountNamespace = Utils.getSystemPropertyOrEnvVar(KUBERNETES_NAMESPACE_FILE, KUBERNETES_NAMESPACE_PATH);
-      boolean serviceAccountNamespaceExists = Files.isRegularFile(new File(serviceAccountNamespace).toPath());
+      boolean serviceAccountNamespaceExists = isRegularFile(new File(serviceAccountNamespace));
       if (serviceAccountNamespaceExists) {
         LOGGER.debug("Found service account namespace at: [" + serviceAccountNamespace + "].");
-        try {
-          String namespace = new String(Files.readAllBytes(new File(serviceAccountNamespace).toPath()));
+        try (RandomAccessFile f = new RandomAccessFile(new File(serviceAccountNamespace), "r")) {
+          byte[] b = new byte[(int) f.length()];
+          f.readFully(b);
+          String namespace = new String(b);
           config.setNamespace(namespace.replace(System.lineSeparator(), ""));
           return true;
         } catch (IOException e) {
@@ -696,6 +699,24 @@ public class Config {
       LOGGER.debug("Failure in determining private key algorithm type, defaulting to RSA ", exception.getMessage());
     }
     return null;
+  }
+
+  private static boolean isRegularFile(File file) {
+    if (file.isDirectory() || !file.isFile()) { // example: /dev/null from ConfigTest
+      return false;
+    }
+    try {
+      File canon;
+      if (file.getParent() == null) {
+        canon = file;
+      } else {
+        File canonDir = file.getParentFile().getCanonicalFile();
+        canon = new File(canonDir, file.getName());
+      }
+      return canon.getCanonicalFile().equals(canon.getAbsoluteFile());
+    } catch (IOException io) {
+      return false;
+    }
   }
 
   @JsonProperty("oauthToken")
