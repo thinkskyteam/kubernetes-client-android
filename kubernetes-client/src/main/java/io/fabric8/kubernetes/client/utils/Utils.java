@@ -19,10 +19,7 @@ package io.fabric8.kubernetes.client.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.Flushable;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -253,7 +250,7 @@ public class Utils {
 
   public static String filePath(URL path) {
     try {
-      return Paths.get(path.toURI()).toString();
+      return new File(path.toURI()).getPath();
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }

@@ -90,7 +90,7 @@ public class CertUtils {
   }
 
   public static KeyStore createTrustStore(InputStream pemInputStream, String trustStoreFile, char[] trustStorePassphrase) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
-    KeyStore trustStore = KeyStore.getInstance("JKS");
+    KeyStore trustStore = getKeyStoreInstance();
 
     if (Utils.isNotNullOrEmpty(trustStoreFile)) {
       trustStore.load(new FileInputStream(trustStoreFile), trustStorePassphrase);
@@ -112,7 +112,7 @@ public class CertUtils {
       Collection<? extends Certificate> certificates = certFactory.generateCertificates(certInputStream);
       PrivateKey privateKey = loadKey(keyInputStream, clientKeyAlgo);
 
-      KeyStore keyStore = KeyStore.getInstance("JKS");
+      KeyStore keyStore = getKeyStoreInstance();
       if (Utils.isNotNullOrEmpty(keyStoreFile)){
         keyStore.load(new FileInputStream(keyStoreFile), keyStorePassphrase);
       } else {
@@ -283,5 +283,13 @@ public class CertUtils {
       buf.append(line.trim());
     }
     throw new IOException("PEM is invalid : No end marker");
+  }
+
+  private static KeyStore getKeyStoreInstance() throws KeyStoreException {
+    if ("The Android Project".equals(System.getProperty("java.vendor"))) {
+      return KeyStore.getInstance("BKS");
+    } else {
+      return KeyStore.getInstance("JKS");
+    }
   }
 }
