@@ -125,7 +125,7 @@ public class Serialization {
       InputStream wrapped = parameters != null && !parameters.isEmpty() ? ReplaceValueStream.replaceValues(is, parameters) : is;
       BufferedInputStream bis = new BufferedInputStream(wrapped)
     ) {
-      bis.mark(-1);
+      bis.mark(1);
       int intch;
       do {
         intch = bis.read();
