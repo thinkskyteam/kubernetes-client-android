@@ -200,6 +200,10 @@
           <groupId>com.sun</groupId>
           <artifactId>tools</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>io.sundr</groupId>
+          <artifactId>sundr-core</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -207,6 +211,20 @@
       <artifactId>transform-annotations</artifactId>
       <scope>compile</scope>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.sundr</groupId>
+          <artifactId>sundr-codegen</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.sundr</groupId>
+          <artifactId>sundr-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
