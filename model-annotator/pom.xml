@@ -34,6 +34,12 @@
       <groupId>org.jsonschema2pojo</groupId>
       <artifactId>jsonschema2pojo-core</artifactId>
       <version>${jsonschema2pojo.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
@@ -57,6 +63,16 @@
       <groupId>io.sundr</groupId>
       <artifactId>transform-annotations</artifactId>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.sundr</groupId>
+          <artifactId>sundr-codegen</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.sundr</groupId>
+          <artifactId>sundr-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
